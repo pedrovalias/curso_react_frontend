@@ -2,6 +2,7 @@
 // useEffect: Função que é carregada TODA VEZ QUE A TELA É CARREGADA
 import React, { useState, useEffect } from 'react'; 
 import * as S from './styles';
+import { Link } from 'react-router-dom';
 
 // Importa as rotas da API desenvolvida no backend
 import api from '../../services/api';
@@ -18,9 +19,11 @@ function Home() {
   // useState: VARIÁVEIS DE ESTADO
   // Essa constante será um vetor
   // onde filterActived é o NOME do 
-  const [filterActived, setFilterActived] = useState('today');
+  const [filterActived, setFilterActived] = useState('all');
   // Constante que vai armazenar uma coleção de informações, que começa vazia ([])
   const [tasks, setTasks] = useState([]);
+
+  const [lateCount, setLateCount] = useState();
 
   // console.log(api);
 
@@ -35,16 +38,36 @@ function Home() {
     });
   }
 
+  async function lateVerify(){
+    await api.get(`/task/filter/late/11:11:11:11:11:11`)
+    .then(response => {
+      setLateCount(response.data.length); // lenght retorna a quantidade
+    })
+    .catch(error => {
+      console.log(error.response)
+    });
+  }
+
+  function Notification(){
+    setFilterActived('late');
+  }
+
+
+
   // O react vai chamar a função loadTasks puxando do backend toda vez que a tela carregar
   // bem como toda vez que o estado do parâmetro filterActived mudar, chamando novamente a função loadTasks
   useEffect(() => {
     loadTasks();
+    lateVerify();
   }, [filterActived]) // pode ser passado mais parametros ou nenhum, depende da necessidade
 
   return (
     <S.Container>
 
-      <Header />
+      {/* Passa pro Header o valor recuperado do contador de tarefas atrasadas
+          e uma FUNÇÃO criada para notificar;
+          'clickNotification' e 'Notification' FORAM CRIADAS POR MIM  */}
+      <Header lateCount={lateCount} clickNotification={Notification}/>
 
       <S.FilterArea>
 
@@ -73,14 +96,17 @@ function Home() {
       </S.FilterArea>
 
       <S.Title>
-        <h3>Tarefas</h3>
+        <h3>{filterActived == 'late' ? 'TAREFAS ATRASADAS' : 'TAREFAS'}</h3>
       </S.Title>
       
       <S.Content>
         {/* O map percorre item a item dentro da coleção - é uma estrutura de repetiçao */}
         {
           tasks.map(t => (
-            <TaskCard />
+            // Passando o id como _id porque é assim que o Mongo registra o dado
+            <Link to={`/task/${t._id}`}>
+              <TaskCard type={t.type} title={t.title} when={t.when} done={t.done}/>
+            </Link>
           ))
         }
       </S.Content>

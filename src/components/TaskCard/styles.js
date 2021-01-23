@@ -14,6 +14,7 @@ export const Container = styled.div`
     margin: 20px;
     cursor: pointer;
     transition: all 0.3s ease; // Para ficar mais suave a transição na passagem do mouse
+    opacity: ${props => props.done ? 0.35 : 1}; // Se done o card fica opaco, senão fica visível
 
     &:hover {
         opacity: 50%; // Fica mais transparente ao passar o mouse por cima
